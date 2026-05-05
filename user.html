@@ -1,12 +1,10 @@
-```html
 <!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Input Mood</title>
+<title>Mood App</title>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -15,119 +13,97 @@
 
 <style>
 *{box-sizing:border-box;font-family:'Inter',sans-serif}
-body{
-  margin:0;
-  background:#f1f5f9;
-  padding:15px;
+body{margin:0;background:#f1f5f9}
+
+.container{padding:15px;padding-bottom:80px}
+.card{background:white;border-radius:20px;padding:20px;box-shadow:0 10px 25px rgba(0,0,0,0.08)}
+
+/* NAVBAR BOTTOM */
+.nav{
+position:fixed;
+bottom:0;
+left:0;
+right:0;
+background:white;
+display:flex;
+justify-content:space-around;
+padding:10px 0;
+box-shadow:0 -5px 15px rgba(0,0,0,0.1);
+border-top-left-radius:15px;
+border-top-right-radius:15px;
+}
+.nav button{
+background:none;border:none;font-size:12px;color:#555
 }
 
-/* HEADER */
-.header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:15px;
-}
-
-.header h3{
-  margin:0;
-}
-
-.logout{
-  background:#ef4444;
-  color:white;
-  border:none;
-  padding:8px 12px;
-  border-radius:8px;
-  cursor:pointer;
-}
-
-/* CARD */
-.card{
-  background:white;
-  border-radius:20px;
-  padding:20px;
-  box-shadow:0 10px 25px rgba(0,0,0,0.08);
-}
+.active{color:#4f46e5;font-weight:600}
 
 /* SLIDER */
-.slider{
-  width:100%;
-  margin-top:15px;
-}
+.slider{width:100%;margin-top:15px}
+.emoji{text-align:center;font-size:40px;margin-top:10px}
+.label{text-align:center;font-weight:600}
 
-.emoji{
-  text-align:center;
-  font-size:40px;
-  margin-top:10px;
-}
+textarea{width:100%;margin-top:15px;padding:12px;border-radius:12px;border:1px solid #ddd}
 
-.label{
-  text-align:center;
-  font-weight:600;
-}
+button.submit{width:100%;margin-top:15px;padding:14px;border:none;border-radius:12px;background:#4f46e5;color:white}
 
-/* TEXT */
-textarea{
-  width:100%;
-  margin-top:15px;
-  padding:12px;
-  border-radius:12px;
-  border:1px solid #ddd;
-  resize:none;
-}
-
-/* BUTTON */
-button.submit{
-  width:100%;
-  margin-top:15px;
-  padding:14px;
-  border:none;
-  border-radius:12px;
-  background:#4f46e5;
-  color:white;
-  font-size:16px;
-  font-weight:600;
-}
-
-/* RESULT */
-.result{
-  margin-top:15px;
-  padding:12px;
-  border-radius:12px;
-  display:none;
-}
-.success{background:#dcfce7;color:#166534}
-.warning{background:#fef3c7;color:#92400e}
-.neutral{background:#f3f4f6;color:#374151}
+.section{display:none}
+.section.active{display:block}
 
 </style>
 </head>
-
 <body>
 
-<div class="header">
-  <h3 id="username">Halo</h3>
-  <button class="logout" onclick="logout()">Logout</button>
+<div class="container">
+
+<!-- HOME -->
+<div id="home" class="section active">
+<div class="card">
+<h3>Input Mood</h3>
+<input type="range" min="0" max="100" value="50" class="slider" id="slider">
+<div class="emoji" id="emoji">😐</div>
+<div class="label" id="label">Biasa</div>
+<textarea id="text" placeholder="Ceritakan..."></textarea>
+<button class="submit" onclick="saveMood()">Kirim</button>
+</div>
 </div>
 
+<!-- HISTORY -->
+<div id="history" class="section">
 <div class="card">
-  <h4>Bagaimana perasaan kamu hari ini?</h4>
+<h3>History</h3>
+<div id="historyList"></div>
+</div>
+</div>
 
-  <input type="range" min="0" max="100" value="50" class="slider" id="slider">
+<!-- ANALYTICS -->
+<div id="analytics" class="section">
+<div class="card">
+<h3>Analytics</h3>
+<p>Coming soon (chart mood)</p>
+</div>
+</div>
 
-  <div class="emoji" id="emoji">😐</div>
-  <div class="label" id="label">Biasa</div>
+<!-- INBOX -->
+<div id="inbox" class="section">
+<div class="card">
+<h3>Inbox</h3>
+<p>Tidak ada pesan</p>
+</div>
+</div>
 
-  <textarea id="text" rows="4" placeholder="Ceritakan pengalaman kerja kamu hari ini..."></textarea>
+</div>
 
-  <button class="submit" onclick="saveMood()">Kirim</button>
-
-  <div id="result" class="result"></div>
+<!-- NAVIGATION -->
+<div class="nav">
+<button onclick="show('home')" class="active">Home</button>
+<button onclick="show('history')">History</button>
+<button onclick="show('analytics')">Analytics</button>
+<button onclick="show('inbox')">Inbox</button>
+<button onclick="logout()">Logout</button>
 </div>
 
 <script>
-// CONFIG SAMA DENGAN LOGIN.HTML
 const firebaseConfig = {
   apiKey: "AIzaSyC5hKtPlopoZMHaxTLns6GS886uU58g3UI",
   authDomain: "moodemployee-dae2f.firebaseapp.com",
@@ -135,78 +111,75 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// CEK LOGIN
+// AUTH
+let currentUser;
 auth.onAuthStateChanged(user=>{
-  if(!user){
-    window.location = "login.html";
-  }else{
-    document.getElementById("username").innerText = "Halo, " + (user.displayName || user.email);
+  if(!user) window.location="login.html";
+  else{
+    currentUser = user;
+    loadHistory();
   }
 });
 
-// SLIDER
-const slider = document.getElementById("slider");
-const emoji = document.getElementById("emoji");
-const label = document.getElementById("label");
+// NAVIGATION
+function show(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
 
-slider.oninput = function(){
-  if(this.value < 33){
-    emoji.innerHTML = "😞";
-    label.innerHTML = "Sedih";
-  } else if(this.value < 66){
-    emoji.innerHTML = "😐";
-    label.innerHTML = "Biasa";
-  } else {
-    emoji.innerHTML = "😊";
-    label.innerHTML = "Senang";
-  }
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
 }
 
-// ANALISA
-function analyze(text){
-  text = text.toLowerCase();
+// SLIDER
+const slider = document.getElementById("slider");
+slider.oninput = function(){
+  if(this.value < 33){emoji.innerHTML="😞";label.innerHTML="Sedih"}
+  else if(this.value < 66){emoji.innerHTML="😐";label.innerHTML="Biasa"}
+  else{emoji.innerHTML="😊";label.innerHTML="Senang"}
+}
 
-  if(text.includes("terima kasih") || text.includes("senang") || text.includes("baik")){
-    return {cat:"APPRECIATION", class:"success", msg:"Kamu lagi positif 👍"};
-  } else if(text.includes("kendala") || text.includes("sulit") || text.includes("error")){
-    return {cat:"FOLLOW UP", class:"warning", msg:"Perlu ditindaklanjuti ⚠️"};
-  } else {
-    return {cat:"ONLY TELL", class:"neutral", msg:"Catatan biasa."};
-  }
+// ANALYZE
+function analyze(text){
+  text=text.toLowerCase();
+  if(text.includes("senang")) return "APPRECIATION";
+  if(text.includes("kendala")) return "FOLLOW UP";
+  return "ONLY TELL";
 }
 
 // SAVE
 async function saveMood(){
-  const user = auth.currentUser;
-  const text = document.getElementById("text").value;
-  const sliderVal = slider.value;
-
-  const result = analyze(text);
+  const text=document.getElementById("text").value;
+  const mood=slider.value;
 
   await db.collection("moods").add({
-    uid:user.uid,
-    name:user.displayName || user.email,
+    uid:currentUser.uid,
     text:text,
-    mood:sliderVal,
-    category:result.cat,
+    mood:mood,
+    category:analyze(text),
     createdAt:new Date()
   });
 
-  const box = document.getElementById("result");
-  box.className = "result " + result.class;
-  box.style.display = "block";
-  box.innerHTML = `<b>${result.cat}</b><br>${result.msg}`;
+  alert("Tersimpan");
+  loadHistory();
+}
+
+// HISTORY
+async function loadHistory(){
+  const snap = await db.collection("moods").where("uid","==",currentUser.uid).get();
+  let html="";
+  snap.forEach(doc=>{
+    const d=doc.data();
+    html+=`<p>${d.text} - <b>${d.category}</b></p>`;
+  });
+  document.getElementById("historyList").innerHTML=html;
 }
 
 // LOGOUT
 function logout(){
-  auth.signOut().then(()=>{
-    window.location = "index.html";
-  });
+  auth.signOut().then(()=>window.location="index.html");
 }
 </script>
 
