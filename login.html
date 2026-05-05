@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - Mood Tracker</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<!-- Font -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box;font-family:'Inter',sans-serif}
+body{
+  margin:0;
+  background:linear-gradient(135deg,#4f46e5,#7c3aed);
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.card{
+  background:white;
+  padding:30px;
+  border-radius:20px;
+  width:100%;
+  max-width:350px;
+  box-shadow:0 15px 35px rgba(0,0,0,0.2);
+  text-align:center;
+}
+
+h2{margin-bottom:20px}
+
+input{
+  width:100%;
+  padding:12px;
+  margin:8px 0;
+  border-radius:10px;
+  border:1px solid #ddd;
+}
+
+button{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  margin-top:10px;
+  cursor:pointer;
+  font-weight:600;
+}
+
+.login-btn{background:#4f46e5;color:white}
+.register-btn{background:#22c55e;color:white}
+.google-btn{background:#db4437;color:white}
+
+hr{margin:20px 0}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <h2>Login Mood Tracker</h2>
+
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Password">
+
+  <button class="login-btn" onclick="loginEmail()">Login</button>
+  <button class="register-btn" onclick="registerEmail()">Register</button>
+
+  <hr>
+
+  <button class="google-btn" onclick="loginGoogle()">Login with Google</button>
+</div>
+
+<script>
+// 🔥 GANTI DENGAN CONFIG FIREBASE KAMU
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// ================= REGISTER =================
+function registerEmail(){
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  auth.createUserWithEmailAndPassword(email, password)
+    .then(async (res)=>{
+      const user = res.user;
+
+      await db.collection("users").doc(user.uid).set({
+        uid:user.uid,
+        email:email,
+        role:"user"
+      });
+
+      alert("Register berhasil, silakan login");
+    })
+    .catch(err=>alert(err.message));
+}
+
+// ================= LOGIN EMAIL =================
+function loginEmail(){
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  auth.signInWithEmailAndPassword(email, password)
+    .then(async (res)=>{
+      const user = res.user;
+
+      const ref = db.collection("users").doc(user.uid);
+      const doc = await ref.get();
+
+      if(!doc.exists){
+        alert("User tidak ditemukan di database");
+        return;
+      }
+
+      const role = doc.data().role;
+
+      if(role === "admin"){
+        window.location = "admin.html";
+      } else {
+        window.location = "user.html";
+      }
+    })
+    .catch(err=>alert(err.message));
+}
+
+// ================= LOGIN GOOGLE =================
+function loginGoogle(){
+  const provider = new firebase.auth.GoogleAuthProvider();
+
+  auth.signInWithPopup(provider)
+    .then(async (result)=>{
+      const user = result.user;
+
+      const ref = db.collection("users").doc(user.uid);
+      const doc = await ref.get();
+
+      if(!doc.exists){
+        await ref.set({
+          uid:user.uid,
+          name:user.displayName,
+          email:user.email,
+          role:"user"
+        });
+      }
+
+      const role = (await ref.get()).data().role;
+
+      if(role === "admin"){
+        window.location = "admin.html";
+      } else {
+        window.location = "user.html";
+      }
+    })
+    .catch(err=>alert(err.message));
+}
+</script>
+
+</body>
+</html>
+```
