@@ -1,0 +1,214 @@
+```html
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Input Mood</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box;font-family:'Inter',sans-serif}
+body{
+  margin:0;
+  background:#f1f5f9;
+  padding:15px;
+}
+
+/* HEADER */
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:15px;
+}
+
+.header h3{
+  margin:0;
+}
+
+.logout{
+  background:#ef4444;
+  color:white;
+  border:none;
+  padding:8px 12px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+/* CARD */
+.card{
+  background:white;
+  border-radius:20px;
+  padding:20px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.08);
+}
+
+/* SLIDER */
+.slider{
+  width:100%;
+  margin-top:15px;
+}
+
+.emoji{
+  text-align:center;
+  font-size:40px;
+  margin-top:10px;
+}
+
+.label{
+  text-align:center;
+  font-weight:600;
+}
+
+/* TEXT */
+textarea{
+  width:100%;
+  margin-top:15px;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid #ddd;
+  resize:none;
+}
+
+/* BUTTON */
+button.submit{
+  width:100%;
+  margin-top:15px;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  background:#4f46e5;
+  color:white;
+  font-size:16px;
+  font-weight:600;
+}
+
+/* RESULT */
+.result{
+  margin-top:15px;
+  padding:12px;
+  border-radius:12px;
+  display:none;
+}
+.success{background:#dcfce7;color:#166534}
+.warning{background:#fef3c7;color:#92400e}
+.neutral{background:#f3f4f6;color:#374151}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <h3 id="username">Halo</h3>
+  <button class="logout" onclick="logout()">Logout</button>
+</div>
+
+<div class="card">
+  <h4>Bagaimana perasaan kamu hari ini?</h4>
+
+  <input type="range" min="0" max="100" value="50" class="slider" id="slider">
+
+  <div class="emoji" id="emoji">😐</div>
+  <div class="label" id="label">Biasa</div>
+
+  <textarea id="text" rows="4" placeholder="Ceritakan pengalaman kerja kamu hari ini..."></textarea>
+
+  <button class="submit" onclick="saveMood()">Kirim</button>
+
+  <div id="result" class="result"></div>
+</div>
+
+<script>
+// CONFIG SAMA DENGAN LOGIN.HTML
+const firebaseConfig = {
+  apiKey: "AIzaSyC5hKtPlopoZMHaxTLns6GS886uU58g3UI",
+  authDomain: "moodemployee-dae2f.firebaseapp.com",
+  projectId: "moodemployee-dae2f"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// CEK LOGIN
+auth.onAuthStateChanged(user=>{
+  if(!user){
+    window.location = "login.html";
+  }else{
+    document.getElementById("username").innerText = "Halo, " + (user.displayName || user.email);
+  }
+});
+
+// SLIDER
+const slider = document.getElementById("slider");
+const emoji = document.getElementById("emoji");
+const label = document.getElementById("label");
+
+slider.oninput = function(){
+  if(this.value < 33){
+    emoji.innerHTML = "😞";
+    label.innerHTML = "Sedih";
+  } else if(this.value < 66){
+    emoji.innerHTML = "😐";
+    label.innerHTML = "Biasa";
+  } else {
+    emoji.innerHTML = "😊";
+    label.innerHTML = "Senang";
+  }
+}
+
+// ANALISA
+function analyze(text){
+  text = text.toLowerCase();
+
+  if(text.includes("terima kasih") || text.includes("senang") || text.includes("baik")){
+    return {cat:"APPRECIATION", class:"success", msg:"Kamu lagi positif 👍"};
+  } else if(text.includes("kendala") || text.includes("sulit") || text.includes("error")){
+    return {cat:"FOLLOW UP", class:"warning", msg:"Perlu ditindaklanjuti ⚠️"};
+  } else {
+    return {cat:"ONLY TELL", class:"neutral", msg:"Catatan biasa."};
+  }
+}
+
+// SAVE
+async function saveMood(){
+  const user = auth.currentUser;
+  const text = document.getElementById("text").value;
+  const sliderVal = slider.value;
+
+  const result = analyze(text);
+
+  await db.collection("moods").add({
+    uid:user.uid,
+    name:user.displayName || user.email,
+    text:text,
+    mood:sliderVal,
+    category:result.cat,
+    createdAt:new Date()
+  });
+
+  const box = document.getElementById("result");
+  box.className = "result " + result.class;
+  box.style.display = "block";
+  box.innerHTML = `<b>${result.cat}</b><br>${result.msg}`;
+}
+
+// LOGOUT
+function logout(){
+  auth.signOut().then(()=>{
+    window.location = "index.html";
+  });
+}
+</script>
+
+</body>
+</html>
