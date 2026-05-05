@@ -96,11 +96,30 @@ button.submit{width:100%;margin-top:15px;padding:14px;border:none;border-radius:
 
 <!-- NAVIGATION -->
 <div class="nav">
-<button onclick="show('home')" class="active">Home</button>
-<button onclick="show('history')">History</button>
-<button onclick="show('analytics')">Analytics</button>
-<button onclick="show('inbox')">Inbox</button>
-<button onclick="logout()">Logout</button>
+<button onclick="show('home')" class="active">
+<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 10L12 3l9 7"></path><path d="M9 21V12h6v9"></path></svg>
+<br>Home
+</button>
+
+<button onclick="show('history')">
+<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 3v5h5"></path><path d="M3.05 13a9 9 0 1 0 .5-5"></path></svg>
+<br>History
+</button>
+
+<button onclick="show('analytics')">
+<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 3v18h18"></path><path d="M7 12l3-3 4 4 5-5"></path></svg>
+<br>Analytics
+</button>
+
+<button onclick="show('inbox')">
+<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10"></path><path d="M3 15l3 4h12l3-4"></path></svg>
+<br>Inbox
+</button>
+
+<button onclick="logout()">
+<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="M16 17l5-5-5-5"></path><path d="M21 12H9"></path></svg>
+<br>Logout
+</button>
 </div>
 
 <script>
